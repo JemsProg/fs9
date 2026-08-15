@@ -395,48 +395,93 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 @api_view(['POST'])
+
+@csrf_exempt
+@api_view(['POST'])
 def xendit_webhook(request):
-    try: 
-        callback_token = request.header.get('x-callback-token')
+    try:
+        # Xendit callback verification
+        callback_token = request.headers.get('x-callback-token')
 
         if not settings.XENDIT_CALLBACK_TOKEN:
-            return Response({'error': 'Invalid xendit callback token'}, status=status.HTTP_403_FORBIDDEN)
-        if callback_token != settings.XENDIT_CALLBACK_TOKEN:
-            return Response({'error': 'Invalid Xendit callback token.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {'error': 'XENDIT_CALLBACK_TOKEN is not configured.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-        payload = json.loads(request.body)
+        if callback_token != settings.XENDIT_CALLBACK_TOKEN:
+            return Response(
+                {'error': 'Invalid Xendit callback token.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # DRF already parses JSON for application/json requests
+        payload = request.data
 
         xendit_invoice_id = payload.get('id')
         xendit_external_id = payload.get('external_id')
         xendit_status = payload.get('status')
 
         if not xendit_invoice_id and not xendit_external_id:
-            return Response({'error': 'Missing Xendit Invoice reference'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Missing Xendit invoice reference.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         payment = None
-        if xendit_invoice_id:
-            payment = paymentMethod.objects.filter(xendit_invoice_id=xendit_invoice_id,).first()
-        if not payment and xendit_external_id:
-            payment = paymentMethod.objects.filter(xendit_external_id=xendit_external_id,).first()
-        if not payment:
-            return Response({'message': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if xendit_invoice_id:
+            payment = paymentMethod.objects.filter(
+                xendit_invoice_id=xendit_invoice_id
+            ).first()
+
+        if not payment and xendit_external_id:
+            payment = paymentMethod.objects.filter(
+                xendit_external_id=xendit_external_id
+            ).first()
+
+        if not payment:
+            return Response(
+                {'message': 'Payment not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Update Xendit status
         if xendit_status:
             payment.xendit_status = xendit_status
-            payment.save(update_field=['xendit_status'])
+            payment.save(update_fields=['xendit_status'])
 
+        # Ignore non-paid events
         if xendit_status not in ['PAID', 'SETTLED']:
-            return Response({'message': 'Xendit event received'}, status=status.HTTP_200_OK)
+            return Response(
+                {'message': 'Xendit event received.'},
+                status=status.HTTP_200_OK
+            )
 
+        # Make webhook idempotent
         if payment.isPaid:
             return Response(
-                {'message': 'Already Processed'}, status=status.HTTP_200_OK
+                {'message': 'Payment already processed.'},
+                status=status.HTTP_200_OK
             )
+
         payment.mark_paid()
 
-        return Response({'message': 'Payment confirmed, Order Items Created'}, status=status.HTTP_200_OK)
-    except(KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                'message': (
+                    'Payment confirmed. '
+                    'Order items created and cart cleared.'
+                )
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as exc:
+        return Response(
+            {'error': str(exc)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 from .serializers import PaymentMethodSerializer
