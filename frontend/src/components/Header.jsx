@@ -1,8 +1,12 @@
 // src/components/Header.jsx
 import { Link } from "react-router-dom";
-import React from "react";
+import React, { useContext } from "react";
+import { FaShoppingCart, FaUser } from "react-icons/fa";
+import { AuthContext } from "../context/AuthProvider";
 
 const Header = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
@@ -40,19 +44,32 @@ const Header = () => {
 
         {/* Auth Buttons */}
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            to="/signin"
-            className="rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 hover:text-gray-950"
-          >
-            Sign in
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/cart" className="text-xl">
+                <FaShoppingCart />
+              </Link>
+              <Link to="/profile" className="text-xl">
+                <FaUser />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 hover:text-gray-950"
+              >
+                Sign in
+              </Link>
 
-          <Link
-            to="/register"
-            className="rounded-full bg-gray-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
-          >
-            Register
-          </Link>
+              <Link
+                to="/register"
+                className="rounded-full bg-gray-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}

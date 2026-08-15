@@ -1,23 +1,24 @@
-// src/components/ProductList.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { BASE_URL } from "../api/base";
+import { Link } from "react-router-dom";
 
-// ─────────────────────────────────────────────
-// 1. Sample data (replace with real API data)
-// ─────────────────────────────────────────────
-const sampleProducts = Array.from({ length: 6 }).map((_, i) => ({
-  id: i + 1,
-  name: "PRODUCT NAME",
-  brand: "CISCO",
-  price: 2000,
-  // Use any local/static asset or CDN link here
-  image:
-    "https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?auto=format&fit=crop&w=600&q=60",
-}));
-
-// ─────────────────────────────────────────────
-// 2. Component
-// ─────────────────────────────────────────────
 const ProductList = () => {
+  const [products, setProducts] = useState([]);
+
+  const ProductData = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/products/`);
+      setProducts(response.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    ProductData();
+  });
+
   return (
     <section className="px-6 py-16">
       {/* Heading */}
@@ -27,41 +28,43 @@ const ProductList = () => {
 
       {/* Product grid */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {sampleProducts.map((item) => (
-          <article
-            key={item.id}
-            className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition hover:shadow-lg"
-          >
-            {/* Product image */}
-            <img
-              src={item.image}
-              alt={item.name}
-              className="h-40 w-full object-contain p-6"
-            />
+        {products.map((item) => (
+          <Link to={`/product/${item.id}`} key={item.id}>
+            <article
+              key={item.id}
+              className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition hover:shadow-lg"
+            >
+              {/* Product image */}
+              <img
+                src={`${BASE_URL}${item.image}`}
+                alt={item.product_name}
+                className="h-40 w-full object-contain p-6"
+              />
 
-            {/* Details */}
-            <div className="flex flex-1 flex-col justify-between px-6 pb-6">
-              {/* Name + price */}
-              <div className="mb-1 flex items-start justify-between">
-                <p className="text-sm font-semibold text-gray-800">
-                  {item.name}
+              {/* Details */}
+              <div className="flex flex-1 flex-col justify-between px-6 pb-6">
+                {/* Name + price */}
+                <div className="mb-1 flex items-start justify-between">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {item.product_name}
+                  </p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    ${item.product_price}
+                  </p>
+                </div>
+
+                {/* Brand */}
+                <p className="mb-4 text-xs font-medium uppercase tracking-wide text-gray-500">
+                  {item.brand}
                 </p>
-                <p className="text-sm font-semibold text-gray-700">
-                  ${item.price.toLocaleString()}
-                </p>
+
+                {/* Buy button */}
+                <button className="self-end rounded bg-[#10265A] px-4 py-1.5 text-xs font-semibold tracking-wide text-white transition hover:bg-[#0b1d45]">
+                  BUY
+                </button>
               </div>
-
-              {/* Brand */}
-              <p className="mb-4 text-xs font-medium uppercase tracking-wide text-gray-500">
-                {item.brand}
-              </p>
-
-              {/* Buy button */}
-              <button className="self-end rounded bg-[#10265A] px-4 py-1.5 text-xs font-semibold tracking-wide text-white transition hover:bg-[#0b1d45]">
-                BUY
-              </button>
-            </div>
-          </article>
+            </article>
+          </Link>
         ))}
       </div>
 
