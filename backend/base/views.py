@@ -391,6 +391,7 @@ def create_xendit_payment(request):
 
 
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 @api_view(['POST'])
@@ -443,9 +444,16 @@ from .serializers import PaymentMethodSerializer
 @permission_classes([IsAuthenticated])
 def list_user_orders(request):
     payments = (
-        paymentMethod.objects.filter(user=requests.user).order_by('-id').prefetch_related('orderitem_set_prodcut', 'shippingaddress_set')
+        paymentMethod.objects
+        .filter(user=request.user)
+        .order_by('-id')
+        .prefetch_related('orderitem_set__product')
     )
 
-    serializer = PaymentMethodSerializer(payments, many=True)
+    serializer = PaymentMethodSerializer(
+        payments,
+        many=True,
+        context={'request': request}
+    )
+
     return Response(serializer.data)
-    
