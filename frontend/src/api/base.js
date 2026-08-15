@@ -1,2 +1,2 @@
 // export const BASE_URL = "http://127.0.0.1:8000";
-export const BASE_URL = "https://fs9.onrender.com/api/products";
+export const BASE_URL = "https://fs9.onrender.com";
