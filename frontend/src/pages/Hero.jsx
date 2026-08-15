@@ -1,6 +1,6 @@
 import GuideShop from "../components/GuideShop";
 import ProductList from "../components/ProductList";
-import Hero_image from "../assets/Hero_image.png";
+import Hero_image from "../assets/hero_image.png";
 
 function Hero() {
   return (
