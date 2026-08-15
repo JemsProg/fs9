@@ -392,12 +392,13 @@ def create_xendit_payment(request):
 
 import json
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
 
-@csrf_exempt
-@api_view(['POST'])
 
-@csrf_exempt
+
 @api_view(['POST'])
+@permission_classes([AllowAny])
+
 def xendit_webhook(request):
     try:
         # Xendit callback verification

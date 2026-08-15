@@ -2,13 +2,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "../api/base";
 import { Link } from "react-router-dom";
+import Loading from "./Loading";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
   const ProductData = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/products/`);
+      setLoading(false);
       setProducts(response.data);
     } catch (err) {
       console.log(err);
@@ -18,6 +21,13 @@ const ProductList = () => {
   useEffect(() => {
     ProductData();
   });
+
+  if (isLoading)
+    return (
+      <div className="w-full h-screen flex items-center justify-center ">
+        <Loading />
+      </div>
+    );
 
   return (
     <section className="px-6 py-16">
