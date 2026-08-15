@@ -295,9 +295,9 @@ def create_xendit_payment(request):
         )
 
 
-    cart_items = cartUser.objects.filter(user=user).selected_related('product')
+    cart_items = cartUser.objects.filter(user=user).select_related('product')
 
-    if not cart_items.exist():
+    if not cart_items.exists():
         return Response(
             {'error': 'Cart is empty'},
             status=status.HTTP_400_BAD_REQUEST
@@ -380,7 +380,7 @@ def create_xendit_payment(request):
         )
 
         shippingsAddress.objects.create(
-            paymentID=payment,
+            paymentId=payment,
             fullName = data['fullName'],
             address = data['address'],
             city = data['city'],
